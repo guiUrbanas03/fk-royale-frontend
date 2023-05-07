@@ -1,13 +1,15 @@
-import { View, Text, Button } from "react-native";
+import { View, Text } from "react-native";
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParams } from "../../navigations/RootNavigation/RootNavigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button as PaperButton } from "react-native-paper";
+import { Button } from "../../components/Button";
 import { useUser } from "../../hooks/user/user";
 import { whoAmI } from "../../api/auth/auth";
 import { useAuth } from "../../hooks/auth/auth";
+import { BaseLayout } from "../../components/layout/BaseLayout";
+import { Header } from "../../components/Header/Header";
 
-type ProfileScreenProps = NativeStackScreenProps<RootStackParams, 'Profile'>;
+export type ProfileScreenProps = NativeStackScreenProps<RootStackParams, 'Profile'>;
 const wait = (duration: number) => new Promise((resolve) => setTimeout(resolve, duration));
 
 const POSTS = [
@@ -54,34 +56,33 @@ const ProfileScreen = ({ navigation }: ProfileScreenProps): JSX.Element => {
     }
 
     return (
-        <View>
+        <BaseLayout>
+            <Header />
             <Text>Profile Screen</Text>
             <Text>{user?.id}</Text>
             <Text>{user?.email}</Text>
             {
-               postsQuery.data.map((post) => (
+            postsQuery.data.map((post) => (
                 <View key={post.id}>
                     <Text>{post.title}</Text>
                 </View>
-               )) 
+            )) 
             }
             {
                 newPostMutation.isLoading ? <Text>Creating post...</Text> : null
             }
 
-            <PaperButton mode="contained" onPress={() => whoAmI()}>
+            <Button mode="contained" onPress={() => whoAmI()}>
                 Who Am I
-            </PaperButton>
-            <PaperButton disabled={newPostMutation.isLoading} mode="contained" onPress={() => newPostMutation.mutate("New post")}>
+            </Button>
+            <Button disabled={newPostMutation.isLoading} mode="contained" onPress={() => newPostMutation.mutate("New post")}>
                 Create new post
-            </PaperButton>
+            </Button>
 
-            <Button 
-                title="Logout"
-                onPress={logout}
-            />
-        </View>
+            <Button mode="outlined" onPress={logout}>
+                Logout
+            </Button>
+        </BaseLayout>
     )
 }
-
 export { ProfileScreen };

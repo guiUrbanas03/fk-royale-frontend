@@ -1,4 +1,4 @@
-import { AxiosResponse } from "axios";
+import axios, { AxiosResponse } from "axios";
 import { API } from "../index";
 
 
@@ -56,6 +56,10 @@ const whoAmI = async (): Promise<AxiosResponse<UserResponse>|void> => {
         return res;
     } catch(error) {
         logApiError("WhoAmI", error);
+
+        if (axios.isAxiosError(error)) {
+            // console.log("error axios: ", error.toJSON());
+        }
     }
 }
 

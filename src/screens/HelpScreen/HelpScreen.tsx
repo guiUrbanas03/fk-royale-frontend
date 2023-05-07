@@ -1,6 +1,7 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { View, Text } from "react-native";
+import { Text } from "react-native";
 import { RootStackParams } from "../../navigations/RootNavigation/RootNavigation";
+import { BaseLayout } from "../../components/layout/BaseLayout";
 
 type HelpScreenProps = NativeStackScreenProps<RootStackParams, "Help">
 
@@ -8,9 +9,9 @@ type HelpScreenProps = NativeStackScreenProps<RootStackParams, "Help">
 const HelpScreen = ({ navigation }: HelpScreenProps): JSX.Element => {
 
     return (
-        <View>
+        <BaseLayout>
             <Text>Help Screen</Text>
-        </View>
+        </BaseLayout>
     );
 }
 

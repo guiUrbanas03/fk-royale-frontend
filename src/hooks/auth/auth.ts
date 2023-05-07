@@ -1,6 +1,7 @@
 import { useUser } from "../user/user"
 import { useLoginMutation, useLogoutMutation } from "./queries";
 import { getLocalTokens, resetLocalTokens, setLocalTokens } from "../../services/token-service";
+import Toast from 'react-native-toast-message';
 
 
 const useAuth = () => {
@@ -8,11 +9,11 @@ const useAuth = () => {
     const loginMutation = useLoginMutation();
     const logoutMutation = useLogoutMutation();
 
-    const login = async () => {
+    const login = async (email: string, password: string) => {
         try {
             const res = await loginMutation.mutateAsync({
-                email: "test@2mail.com",
-                password: "123123123"
+                email,
+                password
             });
             
             if (res) {
@@ -22,6 +23,10 @@ const useAuth = () => {
                 }); 
 
                 updateUser(res.user);
+                Toast.show({
+                    type: 'success',
+                    text1: `Welcome, ${res.user.email}!`,
+                });
             }
 
         } catch(error) {

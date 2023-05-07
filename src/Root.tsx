@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider as PaperProvider } from 'react-native-paper';
 import { App } from "./App";
 import { theme } from "./themes/default";
+import Toast from 'react-native-toast-message';
 
 const twentyFourHoursInMs = 1000 * 60 * 60 * 24;
 
@@ -22,6 +23,7 @@ const Root = (): JSX.Element => {
         <QueryClientProvider client={queryClient}>
             <PaperProvider theme={theme}>
                 <App />
+                <Toast />
             </PaperProvider>
         </QueryClientProvider>
     )
