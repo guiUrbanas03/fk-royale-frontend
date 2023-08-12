@@ -6,7 +6,11 @@ const getUser = async () => {
   const res = await whoAmI();
   
   if (res && res.status === 200) {
-    return res.data.user;
+    return {
+      ...res.data.user,
+      "profile": res.data.profile,
+      "game_stats": res.data.game_stats
+    };
   }
 
   return null;

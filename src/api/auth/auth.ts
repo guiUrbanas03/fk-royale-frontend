@@ -13,6 +13,23 @@ type UserResource = {
     email: string;
 } 
 
+type ProfileResource = {
+    id: string;
+    user_id: string;
+    full_name: string;
+    nickname: string;
+    avatar_url?: string
+}
+
+type GameStatsResource = {
+    id: string;
+    profile_id: string;
+    level: number;
+    matches: number;
+    victories: number;
+    xp_points: number;
+}
+
 type RevokedTokenResource = {
     id: string;
     user_id: string;
@@ -29,6 +46,8 @@ type LoginResponse = {
 type UserResponse = {
     message: string;
     user: UserResource;
+    profile: ProfileResource;
+    game_stats: GameStatsResource;
 }
 
 type RefreshTokenResponse = {
