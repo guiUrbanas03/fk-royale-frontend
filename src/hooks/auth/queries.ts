@@ -1,5 +1,13 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { login, whoAmI, logout, LoginUserForm } from "../../api/auth/auth";
+import { login, whoAmI, logout, LoginUserForm, register, RegisterFormData } from "../../api/auth/auth";
+
+const useRegisterMutation = () => {
+    return useMutation({
+        mutationKey: ["user", "create"],
+        mutationFn: (registerData: RegisterFormData) => register(registerData).then(res => res?.data),
+        onError: (error: any) => console.error("Register error: ", error),
+    });
+}
 
 const useLoginMutation = () => {
     return useMutation({
@@ -12,7 +20,7 @@ const useLoginMutation = () => {
 const useWhoAmIQuery = () => {
     return useQuery({
         queryKey: ["auth", "whoami"],
-        queryFn: () => whoAmI().then((res) => res?.data),
+        queryFn: () => whoAmI().then((res) => res),
     })
 }
 
@@ -23,4 +31,4 @@ const useLogoutMutation = () => {
     })
 }
 
-export { useLoginMutation, useLogoutMutation, useWhoAmIQuery };
+export { useRegisterMutation, useLoginMutation, useLogoutMutation, useWhoAmIQuery };

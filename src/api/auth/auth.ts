@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { API } from "../index";
+import { registerDTO } from "../../dtos/auth";
 
 
 type LoginUserForm = {
@@ -40,6 +41,26 @@ type LogoutResponse = {
     revoked_token: RevokedTokenResource
 }
 
+type RegisterFormData = {
+    user: {
+        email: string;
+        password: string;    
+    },
+    profile: {
+        fullname: string;
+        nickname: string;
+    }
+}
+
+const register = async (formData: RegisterFormData): Promise<AxiosResponse<UserResponse>|void> => {
+    try {
+        const res = await API.post<UserResponse>("/user/create", registerDTO(formData));
+        return res;
+    } catch(error) {
+        logApiError("Register", error);
+    }
+}
+
 const login = async (formData: LoginUserForm): Promise<AxiosResponse<LoginResponse>|void> => {
     try {
         const res = await API.post<LoginResponse>("/auth/login", formData);
@@ -52,13 +73,12 @@ const login = async (formData: LoginUserForm): Promise<AxiosResponse<LoginRespon
 const whoAmI = async (): Promise<AxiosResponse<UserResponse>|void> => {
     try {
         const res = await API.get<UserResponse>("/auth/who-am-i");
-
         return res;
     } catch(error) {
         logApiError("WhoAmI", error);
 
         if (axios.isAxiosError(error)) {
-            // console.log("error axios: ", error.toJSON());
+            console.log("error axios: ", error.toJSON());
         }
     }
 }
@@ -95,10 +115,12 @@ const logApiError = (errorName: string, error: any): void => {
 }
 
 export { 
+    register,
     login, 
     logout, 
     refreshAccessToken,
     whoAmI,
     type LoginUserForm,
+    type RegisterFormData,
     type UserResource
  };

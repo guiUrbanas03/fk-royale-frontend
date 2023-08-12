@@ -39,6 +39,7 @@ const generatedColors = {
       surfaceDisabled: "rgba(25, 28, 26, 0.12)",
       onSurfaceDisabled: "rgba(25, 28, 26, 0.38)",
       backdrop: "rgba(42, 50, 46, 0.4)",
+      white: "#FFFFFF"
   }
 
 type GeneratedColors = typeof generatedColors;
