@@ -18,8 +18,10 @@ const RootStack = createNativeStackNavigator<RootStackParams>();
 const { LightTheme } = adaptNavigationTheme({ reactNavigationLight: DefaultTheme });
 
 const RootStackNavigation = (): JSX.Element => {
-    const { user } = useUser();
+    const { user, isLoading } = useUser();
     const theme = useTheme();
+
+    console.log("USER ON ROOT: ", user);
 
     return (
         <NavigationContainer theme={{...LightTheme, colors: {
@@ -28,7 +30,7 @@ const RootStackNavigation = (): JSX.Element => {
         }}}>
             <RootStack.Navigator initialRouteName="Lobby" screenOptions={{headerShown: false }}> 
                 {
-                    user != null ? (
+                    user != null && !isLoading ? (
                         <>
                             <RootStack.Screen name="Profile" component={ProfileScreen} />   
                             <RootStack.Screen name="Lobby" component={LobbyScreen} />

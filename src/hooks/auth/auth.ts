@@ -36,11 +36,11 @@ const useAuth = () => {
                     refreshToken: res.refresh_token
                 }); 
 
-                updateUser(res.user);
+                updateUser({...res.user, profile: res.profile, game_stats: res.game_stats});
 
                 Toast.show({
                     type: 'success',
-                    text1: `Welcome, ${res.user.email}!`,
+                    text1: `Welcome, ${res.profile.full_name.split(" ")[0]}!`,
                 });
             }
 

@@ -40,7 +40,16 @@ type LoginResponse = {
     access_token: string;
     refresh_token: string;
     user: UserResource;
+    profile: ProfileResource;
+    game_stats: GameStatsResource;
     message: string;
+}
+
+type FullUserResource = {
+    id: UserResource['id'],
+    email: UserResource['email'],
+    profile: ProfileResource,
+    game_stats: GameStatsResource
 }
 
 type UserResponse = {
@@ -141,5 +150,6 @@ export {
     whoAmI,
     type LoginUserForm,
     type RegisterFormData,
-    type UserResource
+    type UserResource,
+    type FullUserResource
  };

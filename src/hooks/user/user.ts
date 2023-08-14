@@ -1,5 +1,5 @@
 import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query"
-import { UserResource, whoAmI } from "../../api/auth/auth";
+import { FullUserResource, whoAmI } from "../../api/auth/auth";
 import { useAuthInterceptors } from "../auth/interceptors";
 
 const getUser = async () => {
@@ -17,7 +17,7 @@ const getUser = async () => {
 }
 
 const useUser = () => {
-  const updateUser = (user: UserResource) => {
+  const updateUser = (user: FullUserResource) => {
     queryClient.setQueryData(["auth", "whoami"], user);
   }
 
@@ -28,13 +28,13 @@ const useUser = () => {
   const queryClient: QueryClient = useQueryClient();
   useAuthInterceptors(clearUser);
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading, isError } = useQuery({
     queryKey: ["auth", "whoami"],
     queryFn: () => getUser(),
   });
   
   return { 
-    user, updateUser, clearUser
+    user, updateUser, clearUser, isLoading, isError
   }
 
 }
