@@ -21,8 +21,6 @@ const RootStackNavigation = (): JSX.Element => {
     const { user, isLoading } = useUser();
     const theme = useTheme();
 
-    console.log("USER ON ROOT: ", user);
-
     return (
         <NavigationContainer theme={{...LightTheme, colors: {
             ...LightTheme.colors,
