@@ -12,7 +12,13 @@ const Header = (): JSX.Element => {
 
     return (
         <View style={styles.header}>
-            <Text variant="labelLarge" style={styles.link} onPress={() => navigation.navigate("Lobby")}>FK Royale</Text>
+            <View style={{flexDirection: "row"}}>
+                <Text variant="labelLarge" style={styles.link} onPress={() => navigation.navigate("Lobby")}>FK Royale</Text>
+                <Pressable style={{marginLeft: 8}} onPress={() => navigation.navigate("Help")}>
+                    <Icon name="question-circle" size={20} color="#70B99B" />
+                </Pressable>
+            </View>
+            
             <Pressable style={styles.profileContainer} onPress={() => navigation.navigate("Profile")}>
                 <Text variant="labelLarge" style={{...styles.link, textAlign: 'right'}}>{user?.profile.nickname} </Text>
                 <Icon name="user-circle" size={24} style={{marginLeft: 5}} color="#FFF" />
@@ -31,7 +37,7 @@ const styles = StyleSheet.create<Styles>({
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 20
+        marginBottom: 24
     },
     link: {
         color: "white"
