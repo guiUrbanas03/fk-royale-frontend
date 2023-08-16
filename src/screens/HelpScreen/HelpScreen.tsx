@@ -4,6 +4,8 @@ import { RootStackParams } from "../../navigations/RootNavigation/RootNavigation
 import { BaseLayout } from "../../components/layout/BaseLayout";
 import { useState } from "react";
 import { Button } from "../../components/Button";
+import { Text as PaperText } from "react-native-paper";
+import { theme } from "../../themes/default";
 
 type HelpScreenProps = NativeStackScreenProps<RootStackParams, "Help">
 
@@ -70,6 +72,7 @@ const HelpScreen = ({ navigation }: HelpScreenProps): JSX.Element => {
 
     return (
         <BaseLayout>
+            <PaperText style={styles.logo} variant="displaySmall">FK Royale</PaperText>
             <View style={{height: height * 0.8 - 40}}>
                 {pages[page]()}
             </View>
@@ -91,6 +94,7 @@ const HelpScreen = ({ navigation }: HelpScreenProps): JSX.Element => {
 }
 
 type Styles = {
+    logo: TextStyle
     title: TextStyle,
     textBlock: TextStyle;
     buttonContainer: ViewStyle;
@@ -98,6 +102,12 @@ type Styles = {
 }
 
 const styles = StyleSheet.create<Styles>({
+    logo: {
+        textAlign: "center", 
+        color:  theme.colors.onPrimary,
+        marginBottom: 20
+    },
+
     title: {
         fontSize: 18,
         color: "#FFF",
