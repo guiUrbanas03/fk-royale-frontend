@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { TextInput, Portal, Modal } from "react-native-paper";
 import { Button } from "../../components/Button";
 import Icon  from "react-native-vector-icons/FontAwesome5";
-import { GameRoom, GameRoomSettings } from "../../models/game-room";
+import { GameRoom } from "../../models/game-room";
 import { useUser } from "../../hooks/user/user";
 import { ZodType, z } from "zod";
 import { Controller, useForm } from "react-hook-form";
@@ -37,7 +37,6 @@ const createRoomSchema: ZodType<CreateRoomForm> = z.object({
 });
 
 const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
-    const [isConnected, setIsConnected] = useState<boolean>(socketIo.connected);
     const [visible, setVisible] = useState(false);
     const [rooms, setRooms] = useState<GameRoom[]>([]);
     const { user } = useUser();
@@ -52,30 +51,27 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
     const hideModal = () => setVisible(false);
 
     useEffect(() => {
-        function onConnect() {
-            console.log("socket connected");
-            socketIo.emit("message", "I'm connected!")
-            setIsConnected(true);
-        }
-    
-        function onDisconnect() {
-            console.log("socket disconnected");
-            setIsConnected(false);
-        }
-    
-        socketIo.on('connect', onConnect);
-        socketIo.on('disconnect', onDisconnect);
-        gameRoomSocket.on("connect", () => console.log("connected to game-room"));
-        gameRoomSocket.on("disconnect", () => console.log("connected to game-room"));
+        socketIo.on('connect', () => {
+            console.log("connected to game-room: ", socketIo.id);
+        });
+        socketIo.on('disconnect', () => {
+            console.log("disconnected from game-room: ", socketIo.id);
+        });
 
-        gameRoomSocket.on("create_game_room", (data) => {
-            const gameRoom: GameRoom = new GameRoom(data.id, data.player_id, data.name, new GameRoomSettings(data.settings.max_players, data.settings.hearts, data.settings.turn_time_seconds), data.password)
+        gameRoomSocket.on("connect", () => {
+            console.log("connected to game-room: ", gameRoomSocket.id);
+        });
+
+        gameRoomSocket.on("disconnect", () => {
+            console.log("disconnected from game-room: ", gameRoomSocket.id);
+        });
+
+        gameRoomSocket.on("create_game_room", (data: GameRoom) => {
+            const gameRoom: GameRoom = new GameRoom(data);
             setRooms((prev) => [...prev, gameRoom]);
         })
     
         return () => {
-          socketIo.off('connect', onConnect);
-          socketIo.off('disconnect', onDisconnect);
           gameRoomSocket.off('connect')
           gameRoomSocket.off('disconnect')
         };
@@ -92,8 +88,6 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
     return (
         <BaseLayout>
             <Header />
-            <Text style={{color: isConnected ? "#5AE381" : "#EE597C", fontSize: 12}}>Connected: {String(isConnected)}</Text>
-            
             <View style={styles.roomInputs}>
                 <TextInput 
                     mode="outlined" 
@@ -106,8 +100,8 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
                 />
                 <Portal>
                     <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={styles.createRoomModal}>
-                        <Text style={{color: "#FFF", marginBottom: 20, fontWeight: "700", fontSize: 18}}>Create new room</Text>
-                        <View style={{marginBottom: 10}}>
+                        <Text style={{color: "#FFF", marginBottom: 20, fontWeight: "700", fontSize: 18}}>CREATE NEW ROOM</Text>
+                        <View style={{marginBottom: 20}}>
                             <Controller
                                 control={control}
                                 name="name"
@@ -118,13 +112,18 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
                                         onChangeText={onChange}
                                         onBlur={onBlur}
                                         value={value}
+                                        outlineColor="#FFF" 
+                                        activeOutlineColor="#FFF"
+                                        textColor="#FFF"
+                                        style={{backgroundColor: "rgba(255, 255, 255, 0)"}}
+                                        dense
                                     />
                                 }
                             />
                             { errors.name && <Text style={{ color: "#FFF"}}>{errors.name.message}</Text>}
                         </View>
 
-                        <View style={{marginBottom: 10}}>
+                        <View style={{marginBottom: 20}}>
                             <Controller
                                 control={control}
                                 name="password"
@@ -135,13 +134,18 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
                                         onChangeText={onChange}
                                         onBlur={onBlur}
                                         value={value}
+                                        outlineColor="#FFF" 
+                                        activeOutlineColor="#FFF"
+                                        textColor="#FFF"
+                                        style={{backgroundColor: "rgba(255, 255, 255, 0)"}}
+                                        dense
                                     />
                                 }
                             />
                             { errors.password && <Text style={{ color: "#FFF"}}>{errors.password.message}</Text>}
                         </View>
                         
-                        <View style={{marginBottom: 10}}>
+                        <View style={{marginBottom: 20}}>
                             <Controller
                                 control={control}
                                 name="max_players"
@@ -154,13 +158,18 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
                                         onChangeText={onChange}
                                         onBlur={onBlur}
                                         value={value?.toString()}
+                                        outlineColor="#FFF" 
+                                        activeOutlineColor="#FFF"
+                                        textColor="#FFF"
+                                        style={{backgroundColor: "rgba(255, 255, 255, 0)"}}
+                                        dense
                                     />
                                 }
                             />
                             { errors.max_players && <Text style={{ color: "#FFF"}}>{errors.max_players.message}</Text>}
                         </View>
                         
-                        <View style={{marginBottom: 10}}>
+                        <View style={{marginBottom: 20}}>
                             <Controller
                                 control={control}
                                 name="hearts"
@@ -173,13 +182,18 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
                                         onChangeText={onChange}
                                         onBlur={onBlur}
                                         value={value?.toString()}
+                                        outlineColor="#FFF" 
+                                        activeOutlineColor="#FFF"
+                                        textColor="#FFF"
+                                        style={{backgroundColor: "rgba(255, 255, 255, 0)"}}
+                                        dense
                                     />
                                 }
                             />
                             { errors.hearts && <Text style={{ color: "#FFF"}}>{errors.hearts.message}</Text>}
                         </View>
                         
-                        <View style={{marginBottom: 20}}>
+                        <View style={{marginBottom: 30}}>
                             <Controller
                                 control={control}
                                 name="turn_time_seconds"
@@ -192,13 +206,18 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
                                         keyboardType="number-pad"
                                         inputMode="numeric"
                                         value={value?.toString()}
+                                        outlineColor="#FFF" 
+                                        activeOutlineColor="#FFF"
+                                        textColor="#FFF"
+                                        style={{backgroundColor: "rgba(255, 255, 255, 0)"}}
+                                        dense
                                     />
                                 }
                             />
                             { errors.turn_time_seconds && <Text style={{ color: "#FFF"}}>{errors.turn_time_seconds.message}</Text>}
                         </View>
 
-                        <Button mode="contained" buttonColor="#FFF" textColor="#56947A" onPress={handleSubmit(createRoom)}>Create room</Button>
+                        <Button mode="contained" style={{padding: 4}} buttonColor="#FFF" textColor="#56947A" onPress={handleSubmit(createRoom)}>Create room</Button>
                     </Modal>
                 </Portal>
                 <Button mode="contained" style={{justifyContent: "center", flex: 0}} onPress={showModal}>
@@ -212,7 +231,7 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
                             <View key={room.id} style={{backgroundColor: "#4D8B71", borderRadius: 10, paddingVertical: 10, paddingHorizontal: 20, marginBottom: 20}}>
                                 <View style={{flexDirection: "row", justifyContent: "space-between", marginBottom: 10}}>
                                     <View style={{flexDirection: "row", alignItems: "center", gap: 10}}>
-                                        <Text style={{color: "#FFF", fontWeight: "700", fontSize: 20}}> {room.name}</Text>
+                                        <Text style={{color: "#FFF", fontWeight: "700", fontSize: 20}}>{room.name}</Text>
                                         {room.password ? <Icon name="lock" /> : null}
                                     </View>
                                     <Text style={{color: "#FFF"}}>{room.player_id.substring(0, 5)}</Text>
@@ -220,15 +239,15 @@ const LobbyScreen = ({ navigation }: LobbyScreenProps): JSX.Element => {
                                 <View style={{flexDirection: "row", gap: 30}}>
                                     <View style={{flexDirection: "row", gap: 10, alignItems: "center"}}>
                                         <Icon name="users" color="#FFF" />
-                                        <Text style={{color: "#FFF"}}>{room.settings.max_players}</Text>
+                                        <Text style={{color: "#FFF"}}>{room.max_players}</Text>
                                     </View>
                                     <View style={{flexDirection: "row", gap: 10, alignItems: "center"}}>
                                         <Icon name="heart" color="#FFF" />
-                                        <Text style={{color: "#FFF"}}>{room.settings.hearts}</Text>
+                                        <Text style={{color: "#FFF"}}>{room.hearts}</Text>
                                     </View>
                                     <View style={{flexDirection: "row", gap: 10, alignItems: "center"}}>
                                         <Icon name="clock" color="#FFF" />
-                                        <Text style={{color: "#FFF"}}>{room.settings.turn_time_seconds}</Text>
+                                        <Text style={{color: "#FFF"}}>{room.turn_time_seconds}</Text>
                                     </View>
                                 </View>
                             </View>
