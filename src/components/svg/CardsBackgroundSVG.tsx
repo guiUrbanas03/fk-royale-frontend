@@ -1,12 +1,8 @@
-import { Path, Rect, Svg, SvgProps, TSpan, Text } from "react-native-svg";
+import React from 'react';
+import {Path, Rect, Svg, SvgProps, TSpan, Text} from 'react-native-svg';
 
 const CardsBackgroundSVG = (props: SvgProps): JSX.Element => (
-  <Svg
-    width={461}
-    height={343}
-    fill="none"
-    {...props}
-  >
+  <Svg width={461} height={343} fill="none" {...props}>
     <Rect
       width={235}
       height={365}
@@ -27,10 +23,9 @@ const CardsBackgroundSVG = (props: SvgProps): JSX.Element => (
       fontSize={40}
       fontWeight="bold"
       letterSpacing="0em"
-      transform="rotate(24 142.092 931.653)"
-    >
+      transform="rotate(24 142.092 931.653)">
       <TSpan x={0} y={37.172}>
-        {"5"}
+        {'5'}
       </TSpan>
     </Text>
     <Rect
@@ -52,10 +47,9 @@ const CardsBackgroundSVG = (props: SvgProps): JSX.Element => (
       fontSize={40}
       fontWeight="bold"
       letterSpacing="0em"
-      transform="rotate(-24.88 98.301 -96.333)"
-    >
+      transform="rotate(-24.88 98.301 -96.333)">
       <TSpan x={0} y={37.172}>
-        {"5"}
+        {'5'}
       </TSpan>
     </Text>
     <Rect width={235} height={365} x={113} fill="#343C43" rx={5} />
@@ -70,12 +64,11 @@ const CardsBackgroundSVG = (props: SvgProps): JSX.Element => (
       fontFamily="Roboto"
       fontSize={40}
       fontWeight="bold"
-      letterSpacing="0em"
-    >
+      letterSpacing="0em">
       <TSpan x={133} y={53.172}>
-        {"5"}
+        {'5'}
       </TSpan>
     </Text>
   </Svg>
-)
-export { CardsBackgroundSVG };
+);
+export {CardsBackgroundSVG};
