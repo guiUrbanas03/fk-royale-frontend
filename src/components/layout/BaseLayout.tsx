@@ -1,8 +1,14 @@
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
-import {useTheme} from 'react-native-paper';
-import {ScrollView, StyleSheet, ViewStyle} from 'react-native';
+import {FAB, useTheme} from 'react-native-paper';
+import {ScrollView, StyleSheet, View, ViewStyle} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useSocket} from '../../contexts/SocketContext/SocketContext';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParams} from '../../navigations/RootNavigation/RootNavigation';
+import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import {useUser} from '../../hooks/user/user';
 
 type BaseLayoutProps = {
   children: React.ReactNode;
@@ -10,6 +16,10 @@ type BaseLayoutProps = {
 
 const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
   const theme = useTheme();
+  const navigation: NativeStackNavigationProp<RootStackParams> =
+    useNavigation();
+  const {currentRoom} = useSocket();
+  const {user} = useUser();
 
   return (
     <LinearGradient
@@ -17,13 +27,40 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
       start={{x: 0, y: 0}}
       end={{x: 0, y: 1}}
       style={styles.linearGradient}>
-      <SafeAreaView>
+      <SafeAreaView style={{flex: 1}}>
         <ScrollView
           style={{padding: 20}}
           contentInsetAdjustmentBehavior="automatic">
           {children}
+
+          {currentRoom && user ? (
+            <View style={{height: 100, marginBottom: 20}} />
+          ) : null}
         </ScrollView>
+        {currentRoom && user ? (
+          <FAB
+            icon={() => <FontAwesome5Icon name="home" color="#FFF" size={20} />}
+            style={{
+              position: 'absolute',
+              bottom: 20,
+              right: 20,
+              left: 20,
+              backgroundColor: '#56947A',
+              flexWrap: 'wrap',
+              flex: 1,
+              borderRadius: 10,
+              justifyContent: 'center',
+            }}
+            label={`Click to go back to ${currentRoom.name}`}
+            onPress={() =>
+              navigation.navigate('GameRoom', {gameRoom: currentRoom})
+            }
+            color="#FFF"
+            uppercase={true}
+          />
+        ) : null}
       </SafeAreaView>
+
       {/* <View style={styles.cardsBackground}>
             <CardsBackgroundSVG />
         </View> */}

@@ -11,24 +11,29 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParams} from '../../navigations/RootNavigation/RootNavigation';
 
-type SocketContextType = {
+type SocketContextValue = {
   rooms: GameRoom[];
   gameRoomSocket: typeof gameRoomSocket;
+  currentRoom?: GameRoom;
 };
 
 type SocketProviderProps = {
   children: ReactNode;
 };
 
-const SocketContext = createContext<SocketContextType>({} as SocketContextType);
-const useSocket = () => useContext<SocketContextType>(SocketContext);
+const SocketContext = createContext<SocketContextValue>(
+  {} as SocketContextValue,
+);
+const useSocket = () => useContext<SocketContextValue>(SocketContext);
 
 const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
   const navigation: NativeStackNavigationProp<RootStackParams> =
     useNavigation();
-
   const [rooms, setRooms] = useState<GameRoom[]>([]);
-  
+  const [currentRoom, setCurrentRoom] = useState<GameRoom | undefined>(
+    undefined,
+  );
+
   useEffect(() => {
     const handleConnectGameRoom = () => {
       console.log(`[GAME ROOM]: player ${gameRoomSocket.id} connected.`);
@@ -42,7 +47,10 @@ const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
       console.log(
         `[GAME ROOM]: player ${gameRoomSocket.id} joined room ${data.id}`,
       );
-      setRooms(prev => [...prev, new GameRoom(data)]);
+      const room = new GameRoom(data);
+
+      setRooms(prev => [...prev, room]);
+      setCurrentRoom(room);
       navigation.navigate('GameRoom', {gameRoom: data});
     };
 
@@ -51,6 +59,7 @@ const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
         `[GAME ROOM]: player ${gameRoomSocket.id} left room ${data.id}.`,
       );
       setRooms(prev => prev.filter(gameRoom => gameRoom.id !== data.id));
+      setCurrentRoom(undefined);
       navigation.navigate('Lobby');
     };
 
@@ -67,9 +76,10 @@ const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
     };
   }, []);
 
-  const value: SocketContextType = {
+  const value: SocketContextValue = {
     rooms: rooms,
     gameRoomSocket: gameRoomSocket,
+    currentRoom: currentRoom,
   };
 
   return (

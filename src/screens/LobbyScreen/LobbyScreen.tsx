@@ -35,9 +35,8 @@ const createRoomSchema: ZodType<CreateRoomForm> = z.object({
 });
 
 const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
-  const {gameRoomSocket, rooms} = useSocket();
-
-  const [visible, setVisible] = useState(false);
+  const {gameRoomSocket, rooms, currentRoom} = useSocket();
+  const [visible, setVisible] = useState<boolean>(false);
   const {
     control,
     handleSubmit,
@@ -249,6 +248,8 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
                 paddingVertical: 10,
                 paddingHorizontal: 20,
                 marginBottom: 20,
+                borderColor: room.id === currentRoom?.id ? '#FFD362' : '',
+                borderWidth: room.id === currentRoom?.id ? 1 : 0,
               }}>
               <View
                 style={{
