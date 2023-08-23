@@ -10,9 +10,11 @@ import {adaptNavigationTheme, useTheme} from 'react-native-paper';
 import {useUser} from '../../hooks/user/user';
 import {type GameRoom} from '../../models/game-room';
 import {SocketProvider} from '../../contexts/SocketContext/SocketContext';
+import {EditProfileScreen} from '../../screens/EditProfileScreen/EditProfileScreen';
 
 type RootStackParams = {
   Profile: undefined;
+  EditProfile: undefined;
   Lobby: undefined;
   Help: undefined;
   GameRoom: {gameRoom: GameRoom};
@@ -42,6 +44,10 @@ const RootStackNavigation = (): JSX.Element => {
           {user != null && !isLoading ? (
             <>
               <RootStack.Screen name="Profile" component={ProfileScreen} />
+              <RootStack.Screen
+                name="EditProfile"
+                component={EditProfileScreen}
+              />
               <RootStack.Screen name="Lobby" component={LobbyScreen} />
               <RootStack.Screen name="GameRoom" component={GameRoomScreen} />
             </>

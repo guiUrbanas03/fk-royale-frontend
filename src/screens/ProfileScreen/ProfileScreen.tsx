@@ -24,7 +24,7 @@ export type ProfileScreenProps = NativeStackScreenProps<
 
 const {width} = Dimensions.get('window');
 
-const ProfileScreen = ({}: ProfileScreenProps): JSX.Element => {
+const ProfileScreen = ({navigation}: ProfileScreenProps): JSX.Element => {
   const {logout} = useAuth();
   const {user, isLoading, isError} = useUser();
 
@@ -110,6 +110,13 @@ const ProfileScreen = ({}: ProfileScreenProps): JSX.Element => {
         </Text>
         <Text style={{...styles.statValue, color: '#EE597C'}}>{defeats}</Text>
       </View>
+
+      <Button
+        mode="outlined"
+        onPress={() => navigation.navigate('EditProfile')}
+        style={{marginBottom: 60}}>
+        Edit profile
+      </Button>
 
       <Button mode="outlined" onPress={logout} style={{marginBottom: 60}}>
         Logout
