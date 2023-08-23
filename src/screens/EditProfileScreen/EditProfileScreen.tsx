@@ -1,6 +1,6 @@
 import React from 'react';
-import {StyleSheet, TextStyle, View, ViewStyle} from 'react-native';
-import {Text, TextInput} from 'react-native-paper';
+import {Pressable, StyleSheet, TextStyle, View, ViewStyle} from 'react-native';
+import {IconButton, Text, TextInput} from 'react-native-paper';
 import {BaseLayout} from '../../components/layout/BaseLayout';
 import {Controller, useForm} from 'react-hook-form';
 import {Button} from '../../components/Button';
@@ -8,10 +8,11 @@ import {UpdateProfileFormData} from '../../api/profile/profile';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {ZodType, z} from 'zod';
 import {useProfile} from '../../hooks/profile/profile';
-import {CompositeScreenProps} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParams} from '../../navigations/RootNavigation/RootNavigation';
 import {useUser} from '../../hooks/user/user';
+import Toast from 'react-native-toast-message';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 export type ProfileScreenProps = NativeStackScreenProps<
   RootStackParams,
@@ -29,6 +30,7 @@ const EditProfileScreen = ({navigation}: ProfileScreenProps) => {
     control,
     handleSubmit,
     formState: {errors},
+    reset,
   } = useForm<UpdateProfileFormData>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
@@ -39,13 +41,37 @@ const EditProfileScreen = ({navigation}: ProfileScreenProps) => {
 
   const {update} = useProfile();
 
-  const submitProfileForm = (data: UpdateProfileFormData) => {
-    update(data);
-    navigation.navigate('Profile');
+  const submitProfileForm = async (data: UpdateProfileFormData) => {
+    const res = await update(data);
+
+    if (res?.status === 200) {
+      Toast.show({
+        type: 'success',
+        text1: res.data.message,
+      });
+      navigation.navigate('Profile');
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Something went wrong!',
+      });
+      reset();
+    }
   };
   return (
     <BaseLayout>
-      <Text style={styles.title}>Edit profile</Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: 20,
+          alignItems: 'center',
+          marginBottom: 20,
+        }}>
+        <Pressable onPress={() => navigation.navigate('Profile')}>
+          <Icon name="arrow-left" color="#fff" size={16} />
+        </Pressable>
+        <Text style={styles.title}>Edit profile</Text>
+      </View>
       <View style={styles.input}>
         <Controller
           control={control}
@@ -107,7 +133,6 @@ const styles = StyleSheet.create<Styles>({
   title: {
     fontSize: 20,
     color: '#FFF',
-    marginBottom: 20,
   },
   input: {
     marginBottom: 20,

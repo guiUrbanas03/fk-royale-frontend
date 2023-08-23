@@ -114,7 +114,7 @@ const ProfileScreen = ({navigation}: ProfileScreenProps): JSX.Element => {
       <Button
         mode="outlined"
         onPress={() => navigation.navigate('EditProfile')}
-        style={{marginBottom: 60}}>
+        style={{marginBottom: 20}}>
         Edit profile
       </Button>
 

@@ -20,6 +20,8 @@ const useProfile = () => {
             full_name: res.data.full_name,
           },
         });
+
+        return res;
       }
     } catch (error) {
       console.error(error);
