@@ -18,7 +18,7 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
   const theme = useTheme();
   const navigation: NativeStackNavigationProp<RootStackParams> =
     useNavigation();
-  const {currentRoom} = useSocket();
+  const {currentGame} = useSocket();
   const {user} = useUser();
 
   return (
@@ -33,11 +33,11 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
           contentInsetAdjustmentBehavior="automatic">
           {children}
 
-          {currentRoom && user ? (
+          {currentGame && user ? (
             <View style={{height: 100, marginBottom: 20}} />
           ) : null}
         </ScrollView>
-        {currentRoom && user ? (
+        {currentGame && user ? (
           <FAB
             icon={() => <FontAwesome5Icon name="home" color="#FFF" size={20} />}
             style={{
@@ -51,10 +51,8 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
               borderRadius: 10,
               justifyContent: 'center',
             }}
-            label={`Click to go back to ${currentRoom.name}`}
-            onPress={() =>
-              navigation.navigate('GameRoom', {gameRoom: currentRoom})
-            }
+            label={`Click to go back to ${currentGame.room.name}`}
+            onPress={() => navigation.navigate('GameRoom', {game: currentGame})}
             color="#FFF"
             uppercase={true}
           />

@@ -8,16 +8,16 @@ import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {adaptNavigationTheme, useTheme} from 'react-native-paper';
 import {useUser} from '../../hooks/user/user';
-import {type GameRoom} from '../../models/game-room';
 import {SocketProvider} from '../../contexts/SocketContext/SocketContext';
 import {EditProfileScreen} from '../../screens/EditProfileScreen/EditProfileScreen';
+import {Game} from '../../models/game';
 
 type RootStackParams = {
   Profile: undefined;
   EditProfile: undefined;
   Lobby: undefined;
   Help: undefined;
-  GameRoom: {gameRoom: GameRoom};
+  GameRoom: {game: Game};
   AuthStackNavigation: undefined;
 };
 

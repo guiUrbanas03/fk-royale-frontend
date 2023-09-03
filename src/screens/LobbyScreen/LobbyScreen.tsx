@@ -8,34 +8,35 @@ import {useState} from 'react';
 import {TextInput, Portal, Modal} from 'react-native-paper';
 import {Button} from '../../components/Button';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {GameRoom} from '../../models/game-room';
 import {ZodType, z} from 'zod';
 import {Controller, useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useSocket} from '../../contexts/SocketContext/SocketContext';
+import {useUser} from '../../hooks/user/user';
+import {Room} from '../../models/room';
+import {Game, GameSettings} from '../../models/game';
 
 type LobbyScreenProps = NativeStackScreenProps<RootStackParams, 'Lobby'>;
 
 export type CreateRoomForm = {
-  player_id: GameRoom['player_id'];
-  name: GameRoom['name'];
-  password?: GameRoom['password'];
-  max_players: number;
-  hearts: number;
-  turn_time_seconds: number;
+  name: Room['name'];
+  password?: Room['password'];
+  max_players: GameSettings['max_players'];
+  lives: GameSettings['lives'];
+  turn_time_seconds: GameSettings['turn_time_seconds'];
 };
 
 const createRoomSchema: ZodType<CreateRoomForm> = z.object({
-  player_id: z.string().min(1).max(999),
   name: z.string().min(1).max(20),
   password: z.coerce.string().min(3).max(99).optional(),
   max_players: z.coerce.number().int().min(3).max(8),
-  hearts: z.coerce.number().int().min(1).max(10),
+  lives: z.coerce.number().int().min(1).max(10),
   turn_time_seconds: z.coerce.number().int().min(10).max(120),
 });
 
 const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
-  const {gameRoomSocket, rooms, currentRoom} = useSocket();
+  const {user} = useUser();
+  const {gameRoomSocket, games, currentGame} = useSocket();
   const [visible, setVisible] = useState<boolean>(false);
   const {
     control,
@@ -45,12 +46,11 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
   } = useForm<CreateRoomForm>({
     resolver: zodResolver(createRoomSchema),
     defaultValues: {
-      name: 'Test room name',
+      name: `${user?.profile.full_name.split(' ')[0]}'s Room`,
       password: '12345',
-      hearts: 3,
+      lives: 3,
       max_players: 8,
       turn_time_seconds: 100,
-      player_id: gameRoomSocket.id,
     },
   });
 
@@ -61,6 +61,10 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
     gameRoomSocket.emit('create_game_room', data);
     setVisible(false);
     reset();
+  };
+
+  const joinRoom = (data: Game) => {
+    gameRoomSocket.emit('join_game_room', data);
   };
 
   return (
@@ -168,7 +172,7 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
             <View style={{marginBottom: 20}}>
               <Controller
                 control={control}
-                name="hearts"
+                name="lives"
                 render={({field: {onChange, onBlur, value}}) => (
                   <TextInput
                     mode="outlined"
@@ -186,8 +190,8 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
                   />
                 )}
               />
-              {errors.hearts && (
-                <Text style={{color: '#FFF'}}>{errors.hearts.message}</Text>
+              {errors.lives && (
+                <Text style={{color: '#FFF'}}>{errors.lives.message}</Text>
               )}
             </View>
 
@@ -236,20 +240,21 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
           <Icon name="plus" size={20} />
         </Button>
       </View>
-      {rooms.length > 0 ? (
+      {games?.length > 0 ? (
         <View>
-          {rooms.map((room: GameRoom) => (
+          {games.map((game: Game) => (
             <Pressable
-              onPress={() => navigation.navigate('GameRoom', {gameRoom: room})}
-              key={room.id}
+              onPress={() => joinRoom(game)}
+              key={game.room.id}
               style={{
                 backgroundColor: '#4D8B71',
                 borderRadius: 10,
                 paddingVertical: 10,
                 paddingHorizontal: 20,
                 marginBottom: 20,
-                borderColor: room.id === currentRoom?.id ? '#FFD362' : '',
-                borderWidth: room.id === currentRoom?.id ? 1 : 0,
+                borderColor:
+                  game.room.id === currentGame?.room.id ? '#FFD362' : '',
+                borderWidth: game.room.id === currentGame?.room.id ? 1 : 0,
               }}>
               <View
                 style={{
@@ -261,29 +266,33 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
                   style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
                   <Text
                     style={{color: '#FFF', fontWeight: '700', fontSize: 20}}>
-                    {room.name}
+                    {game.room.name}
                   </Text>
-                  {room.password ? <Icon name="lock" /> : null}
+                  {game.room.password ? <Icon name="lock" /> : null}
                 </View>
-                <Text style={{color: '#FFF'}}>
-                  {room.player_id.substring(0, 5)}
+                <Text style={{color: 'red'}}>
+                  {game.room.id.substring(0, 5)}
                 </Text>
               </View>
               <View style={{flexDirection: 'row', gap: 30}}>
                 <View
                   style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                   <Icon name="users" color="#FFF" />
-                  <Text style={{color: '#FFF'}}>{room.max_players}</Text>
+                  <Text style={{color: '#FFF'}}>
+                    {game.settings.max_players}
+                  </Text>
                 </View>
                 <View
                   style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                   <Icon name="heart" color="#FFF" />
-                  <Text style={{color: '#FFF'}}>{room.hearts}</Text>
+                  <Text style={{color: '#FFF'}}>{game.settings.lives}</Text>
                 </View>
                 <View
                   style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                   <Icon name="clock" color="#FFF" />
-                  <Text style={{color: '#FFF'}}>{room.turn_time_seconds}</Text>
+                  <Text style={{color: '#FFF'}}>
+                    {game.settings.turn_time_seconds}
+                  </Text>
                 </View>
               </View>
             </Pressable>

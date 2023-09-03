@@ -21,6 +21,7 @@ import {FullUserResource} from '../../api/auth/auth';
 import {Button} from '../../components/Button';
 import {useSocket} from '../../contexts/SocketContext/SocketContext';
 import {EventArg, useNavigation} from '@react-navigation/native';
+import {Player} from '../../models/player';
 
 type GameRoomScreenProps = NativeStackScreenProps<RootStackParams, 'GameRoom'>;
 
@@ -39,7 +40,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
   const navigation = useNavigation();
   const {gameRoomSocket} = useSocket();
 
-  const room = route.params.gameRoom;
+  const game = route.params.game;
   const {user} = useUser();
   const [visible, setVisible] = useState<boolean>(false);
 
@@ -95,11 +96,11 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
   };
 
   const onLeaveRoom = () => {
-    gameRoomSocket.emit('leave_game_room', room);
+    gameRoomSocket.emit('leave_game_room', game);
     confirmLeaveRoom();
   };
 
-  const players: FullUserResource[] = [user, ...generateMockedUsers(7)];
+  const players: Player[] = game.room.players;
 
   return (
     <>
@@ -114,7 +115,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
               }}>
-              <Text style={styles.title}>{room.name}</Text>
+              <Text style={styles.title}>{game.room.name}</Text>
               <Pressable
                 style={{
                   backgroundColor: '#4D8B71',
@@ -130,46 +131,43 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
                 />
               </Pressable>
             </View>
-            {room.password ? (
+            {game.room.password ? (
               <View
                 style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                 <Icon name="lock" />
-                <Text>{room.password}</Text>
+                <Text>{game.room.password}</Text>
               </View>
             ) : null}
           </View>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <Text style={{color: '#FFF'}}>
-              {
-                players.find(player => player.id === room.player_id)?.profile
-                  .nickname
-              }
-            </Text>
+            <Text style={{color: '#FFF'}}>{game.room.owner.user.email}</Text>
             <View style={{flexDirection: 'row', gap: 30}}>
               <View
                 style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                 <Icon name="users" color="#FFF" size={16} />
                 <Text style={{color: '#FFF'}}>
-                  {players.length}/{room.max_players}
+                  {players.length}/{game.settings.max_players}
                 </Text>
               </View>
               <View
                 style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                 <Icon name="heart" color="#FFF" size={16} />
-                <Text style={{color: '#FFF'}}>{room.hearts}</Text>
+                <Text style={{color: '#FFF'}}>{game.settings.lives}</Text>
               </View>
               <View
                 style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                 <Icon name="clock" color="#FFF" size={16} />
-                <Text style={{color: '#FFF'}}>{room.turn_time_seconds}</Text>
+                <Text style={{color: '#FFF'}}>
+                  {game.settings.turn_time_seconds}
+                </Text>
               </View>
             </View>
           </View>
         </View>
         <View style={styles.playersContainer}>
-          {players.map((player: FullUserResource) => (
+          {players.map((player: Player) => (
             <View
-              key={player.id}
+              key={player.socket_id}
               style={{
                 backgroundColor: '#4D8B71',
                 borderRadius: 10,
@@ -177,6 +175,8 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 marginBottom: 20,
+                borderWidth: player.user.id === user.id ? 1 : 0,
+                borderColor: player.user.id === user.id ? '#FFD362' : '',
               }}>
               <Image
                 style={styles.avatar}
@@ -192,12 +192,15 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
                   flex: 1,
                   paddingHorizontal: 10,
                 }}>
-                <Text style={{color: '#FFF'}}>{player?.profile.nickname}</Text>
-                {room.player_id === player.id ? (
+                <Text style={{color: '#FFF'}}>{player?.user.email}</Text>
+                {game.room.owner.socket_id === player.socket_id ? (
                   <Text style={{color: '#FFF', fontWeight: '700'}}>OWNER</Text>
                 ) : Math.random() > 0.5 ? (
-                  <Text style={{color: '#5AE381', fontWeight: '700'}}>
-                    READY
+                  // <Text style={{color: '#5AE381', fontWeight: '700'}}>
+                  //   READY
+                  // </Text>
+                  <Text style={{color: '#FFD362', fontWeight: '700'}}>
+                    WAITING
                   </Text>
                 ) : (
                   <Text style={{color: '#FFD362', fontWeight: '700'}}>
@@ -245,7 +248,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
           <Text style={{color: '#FFF', marginBottom: 20, fontSize: 18}}>
             Are you sure you want to leave the room{' '}
             <Text style={{fontWeight: '700', color: '#FFF', fontSize: 18}}>
-              {room.name}
+              {game.room.name}
             </Text>
             ?
           </Text>
