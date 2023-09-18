@@ -38,9 +38,9 @@ const {width} = Dimensions.get('window');
 
 const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
   const navigation = useNavigation();
-  const {gameRoomSocket} = useSocket();
+  const {games, gameRoomSocket} = useSocket();
 
-  const game = route.params.game;
+  const game = games[route.params.gameId];
   const {user} = useUser();
   const [visible, setVisible] = useState<boolean>(false);
 
@@ -100,7 +100,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
     confirmLeaveRoom();
   };
 
-  const players: Player[] = game.room.players;
+  const players: Player[] = game?.room?.players ?? [];
 
   return (
     <>
@@ -224,12 +224,21 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
         <Text style={{color: '#FFF', marginBottom: 20}}>
           Waiting everyone to get ready...
         </Text>
-        <Button
-          mode="contained"
-          buttonColor="#00B4EB"
-          style={{paddingHorizontal: 10, paddingVertical: 5}}>
-          <Text style={{fontWeight: '700', color: '#FFF'}}>START GAME</Text>
-        </Button>
+        {game.room.owner.socket_id === gameRoomSocket.id ? (
+          <Button
+            mode="contained"
+            buttonColor="#00B4EB"
+            style={{paddingHorizontal: 10, paddingVertical: 5}}>
+            <Text style={{fontWeight: '700', color: '#FFF'}}>START GAME</Text>
+          </Button>
+        ) : (
+          <Button
+            mode="contained"
+            buttonColor="#5ADE81"
+            style={{paddingHorizontal: 10, paddingVertical: 5}}>
+            <Text style={{fontWeight: '700', color: '#FFF'}}>I'M READY</Text>
+          </Button>
+        )}
       </View>
       <Portal>
         <Modal

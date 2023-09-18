@@ -18,7 +18,7 @@ class Room {
   }
 
   public static buildRoom(data: Room) {
-    const owner = new Player(data.owner);
+    const owner = Player.buildPlayer(data.owner);
     const players = data.players.map(player => new Player(player));
 
     return new Room({...data, owner, players});

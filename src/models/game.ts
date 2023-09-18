@@ -31,7 +31,7 @@ class Game {
   }
 
   public static buildGame(data: Game) {
-    const room = new Room(data.room);
+    const room = Room.buildRoom(data.room);
     const settings = new GameSettings(data.settings);
     return new Game({...data, settings, room});
   }

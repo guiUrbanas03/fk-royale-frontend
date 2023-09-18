@@ -240,9 +240,9 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
           <Icon name="plus" size={20} />
         </Button>
       </View>
-      {games?.length > 0 ? (
+      {Object.keys(games)?.length > 0 ? (
         <View>
-          {games.map((game: Game) => (
+          {Object.values(games).map((game: Game) => (
             <Pressable
               onPress={() => joinRoom(game)}
               key={game.room.id}

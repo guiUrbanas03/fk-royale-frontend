@@ -52,7 +52,9 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
               justifyContent: 'center',
             }}
             label={`Click to go back to ${currentGame.room.name}`}
-            onPress={() => navigation.navigate('GameRoom', {game: currentGame})}
+            onPress={() =>
+              navigation.navigate('GameRoom', {gameId: currentGame.id})
+            }
             color="#FFF"
             uppercase={true}
           />

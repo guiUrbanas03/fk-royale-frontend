@@ -17,7 +17,7 @@ type RootStackParams = {
   EditProfile: undefined;
   Lobby: undefined;
   Help: undefined;
-  GameRoom: {game: Game};
+  GameRoom: {gameId: Game['id']};
   AuthStackNavigation: undefined;
 };
 
