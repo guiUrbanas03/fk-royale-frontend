@@ -6,7 +6,7 @@ type PlayerStatus = 'idle' | 'unready' | 'ready' | 'playing';
 class Player {
   public socket_id: string;
   public user: FullUserResource;
-  public current_game: Game;
+  public current_game?: Game;
   public status: PlayerStatus;
 
   constructor(playerConstructor: Player) {
@@ -21,7 +21,7 @@ class Player {
   public static buildPlayer(data: Player) {
     let currentGame = data.current_game;
 
-    if (currentGame) {
+    if (currentGame && data.current_game) {
       currentGame = new Game(data.current_game);
     }
 

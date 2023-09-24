@@ -15,7 +15,6 @@ type GameObject = {
 type GameState = {
   games: GameObject;
   players: PlayerObject;
-  current_player?: Player;
 };
 
 type GameAndRoom = {
@@ -41,7 +40,7 @@ interface GameRoomServerToClientEvents {
   remove_from_room: (data: GameAndRoom) => void;
 }
 
-const gameRoomSocket: Socket<
+const socketIO: Socket<
   GameRoomServerToClientEvents,
   GameRoomClientToServerEvents
 > = io('http://localhost:8000/', {
@@ -52,7 +51,7 @@ const gameRoomSocket: Socket<
 });
 
 export {
-  gameRoomSocket,
+  socketIO,
   type GameState,
   type GameObject,
   type PlayerObject,

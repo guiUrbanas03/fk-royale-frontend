@@ -15,6 +15,7 @@ import {useSocket} from '../../contexts/SocketContext/SocketContext';
 import {useUser} from '../../hooks/user/user';
 import {Room} from '../../models/room';
 import {Game, GameSettings} from '../../models/game';
+import Toast from 'react-native-toast-message';
 
 type LobbyScreenProps = NativeStackScreenProps<RootStackParams, 'Lobby'>;
 
@@ -36,7 +37,7 @@ const createRoomSchema: ZodType<CreateRoomForm> = z.object({
 
 const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
   const {user} = useUser();
-  const {gameRoomSocket, games, currentGame} = useSocket();
+  const {socketIO, games, currentGame, currentPlayer} = useSocket();
   const [visible, setVisible] = useState<boolean>(false);
   const {
     control,
@@ -58,13 +59,25 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
   const hideModal = () => setVisible(false);
 
   const createRoom = (data: CreateRoomForm) => {
-    gameRoomSocket.emit('create_game_room', data);
+    socketIO.emit('create_game_room', data);
     setVisible(false);
     reset();
   };
 
   const joinRoom = (data: Game) => {
-    gameRoomSocket.emit('join_game_room', data);
+    if (currentPlayer?.current_game?.id === data.id) {
+      navigation.navigate('GameRoom', {gameId: data.id});
+    } else if (
+      currentPlayer?.current_game &&
+      currentPlayer?.current_game?.id !== data.id
+    ) {
+      Toast.show({
+        type: 'error',
+        text1: 'You are already in a room!',
+      });
+    } else {
+      socketIO.emit('join_game_room', data);
+    }
   };
 
   return (

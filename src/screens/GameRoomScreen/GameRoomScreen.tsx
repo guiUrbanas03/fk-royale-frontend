@@ -1,5 +1,8 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import {RootStackParams} from '../../navigations/RootNavigation/RootNavigation';
 import {
   Dimensions,
@@ -17,7 +20,6 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useUser} from '../../hooks/user/user';
 import {Image} from 'react-native';
-import {FullUserResource} from '../../api/auth/auth';
 import {Button} from '../../components/Button';
 import {useSocket} from '../../contexts/SocketContext/SocketContext';
 import {EventArg, useNavigation} from '@react-navigation/native';
@@ -37,8 +39,9 @@ type EventData = {
 const {width} = Dimensions.get('window');
 
 const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
-  const navigation = useNavigation();
-  const {games, gameRoomSocket} = useSocket();
+  const navigation: NativeStackNavigationProp<RootStackParams> =
+    useNavigation();
+  const {games, socketIO, currentPlayer, currentGame} = useSocket();
 
   const game = games[route.params.gameId];
   const {user} = useUser();
@@ -78,30 +81,36 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
     );
   }
 
-  const generateMockedUsers = (amount: number): FullUserResource[] => {
-    const mockedUsers: FullUserResource[] = [];
-
-    for (let i = 0; i < amount; i++) {
-      mockedUsers.push({
-        ...user,
-        id: i.toString(),
-        profile: {
-          ...user.profile,
-          nickname: `mock_user_${i}`,
-        },
-      });
-    }
-
-    return mockedUsers;
-  };
-
   const onLeaveRoom = () => {
-    gameRoomSocket.emit('leave_game_room', game);
+    socketIO.emit('leave_game_room', game);
     confirmLeaveRoom();
   };
 
   const players: Player[] = game?.room?.players ?? [];
 
+  if (!game) {
+    return (
+      <BaseLayout>
+        <Header />
+        <View>
+          <Text style={{color: '#FFF', fontSize: 20, marginBottom: 10}}>
+            Ops...
+          </Text>
+          <Text style={{color: '#FFF', fontSize: 16, marginBottom: 20}}>
+            This room no longer exists.
+          </Text>
+          <Button
+            mode="contained"
+            style={{padding: 4}}
+            buttonColor="#FFF"
+            textColor="#56947A"
+            onPress={() => navigation.navigate('Lobby')}>
+            LEAVE ROOM
+          </Button>
+        </View>
+      </BaseLayout>
+    );
+  }
   return (
     <>
       <BaseLayout>
@@ -224,7 +233,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
         <Text style={{color: '#FFF', marginBottom: 20}}>
           Waiting everyone to get ready...
         </Text>
-        {game.room.owner.socket_id === gameRoomSocket.id ? (
+        {game.room.owner.socket_id === socketIO.id ? (
           <Button
             mode="contained"
             buttonColor="#00B4EB"
