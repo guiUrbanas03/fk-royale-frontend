@@ -1,40 +1,39 @@
-import {Room} from './room';
+import { RoomResource } from "./room";
 
 type GameStatus = 'waiting' | 'playing';
 
-class GameSettings {
-  public max_players: number;
-  public lives: number;
-  public turn_time_seconds: number;
-
-  constructor(gameSettingsConstructor: GameSettings) {
-    const {max_players, lives, turn_time_seconds} = gameSettingsConstructor;
-
-    this.max_players = max_players;
-    this.lives = lives;
-    this.turn_time_seconds = turn_time_seconds;
-  }
+interface Game {
+  id: GameResource['id'];
+  status: GameResource['status'];
+  roomId: GameResource['room_id'];
+  settings: GameSettings;
 }
 
-class Game {
-  public id: string;
-  public status: GameStatus;
-  public room: Room;
-  public settings: GameSettings;
-
-  constructor(gameConstructor: Omit<Game, 'status'>) {
-    const {id, room, settings} = gameConstructor;
-    this.id = id;
-    this.room = room;
-    this.settings = settings;
-    this.status = 'waiting';
-  }
-
-  public static buildGame(data: Game) {
-    const room = Room.buildRoom(data.room);
-    const settings = new GameSettings(data.settings);
-    return new Game({...data, settings, room});
-  }
+interface GameSettings {
+  maxPlayers: GameSettingsResource['max_players'];
+  lives: GameSettingsResource['lives'];
+  turnTimeSeconds: GameSettingsResource['turn_time_seconds'];
 }
 
-export {Game, GameSettings, type GameStatus};
+interface GameResource {
+  id: string;
+  status: GameStatus;
+  room_id: RoomResource['id'];
+  settings: GameSettingsResource;
+}
+
+interface GameSettingsResource {
+  max_players: number;
+  lives: number;
+  turn_time_seconds: number;
+}
+
+export {
+  type Game,
+  type GameSettings,
+  type GameResource, 
+  type GameSettingsResource,
+  type GameStatus, 
+};
+
+

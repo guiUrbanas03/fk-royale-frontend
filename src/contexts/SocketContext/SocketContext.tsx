@@ -10,22 +10,34 @@ import {
   socketIO,
   GameObject,
   PlayerObject,
-  GameAndRoom,
+  RoomObject,
+  GameStateResource,
+  GamePayloadResource,
+  RemovedGameResource,
 } from '../../socketio';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParams} from '../../navigations/RootNavigation/RootNavigation';
-import {Game, GameSettings} from '../../models/game';
-import {Room} from '../../models/room';
-import {Player} from '../../models/player';
+import { Player, PlayerResource } from '../../models/player';
+import { Game, GameResource } from '../../models/game';
+import { Room } from '../../models/room';
+import { toGame } from '../../transformers/game-transformer';
+import { toPlayer } from '../../transformers/player-transformer';
+import { toRoom } from '../../transformers/room-transformer';
 
 type SocketContextValue = {
   games: GameObject;
   players: PlayerObject;
+  rooms: RoomObject;
   socketIO: typeof socketIO;
-  currentGame?: Game;
   currentPlayer?: Player;
+  currentGame?: Game;
+  currentRoom?: Room;
   logState: () => void;
+  getPlayer: (playerId: string) => Player;
+  getGame: (gameId: string) => Game;
+  getRoom: (roomId: string) => Room;
+
 };
 
 type SocketProviderProps = {
@@ -45,10 +57,24 @@ const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
   const [gameState, setGameState] = useState<GameState>({
     games: {},
     players: {},
+    rooms: {},
   });
 
-  const currentPlayer = gameState.players[socketIO.id];
-  const currentGame = currentPlayer?.current_game;
+  const getPlayer = (playerId: string): Player => {
+    return gameState.players[playerId];
+  }
+
+  const getGame = (gameId: string): Game => {
+    return gameState.games[gameId];
+  }
+
+  const getRoom = (roomId: string): Room => {
+    return gameState.rooms[roomId];
+  }
+
+  const currentPlayer = getPlayer(socketIO.id);
+  const currentGame = currentPlayer?.currentGameId ? getGame(currentPlayer.currentGameId) : undefined;
+  const currentRoom = currentGame?.roomId ? getRoom(currentGame.roomId) : undefined;
 
   const logState = () => {
     console.log(
@@ -57,8 +83,11 @@ const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
         {
           games: gameState.games ?? 'N/D',
           players: gameState.players ?? 'N/D',
+          rooms: gameState.rooms ?? 'N/D',
           currentPlayer: currentPlayer ?? 'N/D',
           currentGame: currentGame ?? 'N/D',
+          currentRoom: currentRoom ?? 'N/D',
+
         },
         null,
         4,
@@ -66,32 +95,42 @@ const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
     );
   };
 
+  const isCurrentPlayer = (socketId: string): boolean => {
+    return socketIO.id === socketId;
+  }
+
   useEffect(() => {
     logState();
   }, [gameState]);
 
   useEffect(() => {
-    const handleConnectGameRoom = () => {
+    const handleConnectSocket = () => {
       console.log(`[GAME ROOM]: player ${socketIO.id} connected.`);
     };
 
-    const handleDisconnectGameRoom = () => {
+    const handleDisconnectSocket = () => {
       console.log(`[GAME ROOM]: player ${socketIO.id} disconnected.`);
     };
 
-    const handleFetchState = (data: GameState) => {
+    const handleFetchState = (data: GameStateResource) => {
       setGameState({
         games: Object.entries(data.games).reduce(
           (prev: GameObject, [key, game]) => {
-            prev[key] = Game.buildGame(game);
+            prev[key] = toGame(game);
             return prev;
           },
           {},
         ),
-
         players: Object.entries(data.players).reduce(
-          (prev: PlayerObject, [key, game]) => {
-            prev[key] = Player.buildPlayer(game);
+          (prev: PlayerObject, [key, player]) => {
+            prev[key] = toPlayer(player);
+            return prev;
+          },
+          {},
+        ),
+        rooms: Object.entries(data.rooms).reduce(
+          (prev: RoomObject, [key, room]) => {
+            prev[key] = toRoom(room);
             return prev;
           },
           {},
@@ -99,182 +138,100 @@ const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
       });
     };
 
-    const handleCreateGameRoom = (data: GameAndRoom) => {
+    const handleAddPlayer = (data: PlayerResource) => {
       console.log(
-        `[GAME ROOM]: player ${socketIO.id} created room ${data.game.room.id}`,
+        `[GAME ROOM]: new player connected ${data.socket_id}.`,
       );
-
-      const room: Room = new Room(data.game.room);
-      const settings: GameSettings = new GameSettings(data.game.settings);
-      const game = new Game({id: data.game.id, room: room, settings: settings});
 
       setGameState(prev => ({
         ...prev,
-        players: {
-          ...prev.players,
-          [data.player.socket_id]: Player.buildPlayer(data.player),
-        },
+        players: {...prev.players, [data.socket_id]: toPlayer(data)},
       }));
-
-      navigation.navigate('GameRoom', {gameId: game.id});
     };
 
-    const handleJoinGameRoom = (data: GameAndRoom) => {
+    const handleAddGame = (data: GamePayloadResource) => {
+      console.log(`[GAME ROOM]: new room ${socketIO.id} created ${data.game.id}.`);
+
+      const player = toPlayer(data.player);
+      const game = toGame(data.game);
+      const room = toRoom(data.room);
+
+      setGameState(prev => ({
+        ...prev,
+        players: {...prev.players, [player.socketId]: player},
+        games: {...prev.games, [game.id]: game},
+        rooms: {...prev.rooms, [room.id]: room}
+      }));
+
+      if (isCurrentPlayer(player.socketId)) {
+        navigation.navigate('GameRoom', {gameId: game.id});
+      }
+    };
+
+    const handleAddPlayerToRoom = (data: GamePayloadResource) => {
       console.log(
-        `[GAME ROOM]: player ${socketIO.id} joined room ${data.game.room.id}`,
+        `[GAME ROOM]: Player ${data.player.socket_id} entering room ${data.room.id}.`,
       );
 
-      if (socketIO.id === data.player.socket_id) {
-        setGameState(prev => ({
-          ...prev,
-          players: {
-            ...prev.players,
-            [data.player.socket_id]: Player.buildPlayer(data.player),
-          },
-        }));
+      setGameState(prev => ({
+        players: {...prev.players, [data.player.socket_id]: toPlayer(data.player)},
+        games: {...prev.games, [data.game.id]: toGame(data.game)},
+        rooms: {...prev.rooms, [data.room.id]: toRoom(data.room)}
+      }));
 
+      if (isCurrentPlayer(data.player.socket_id)) {
         navigation.navigate('GameRoom', {gameId: data.game.id});
       }
     };
 
-    const handleLeaveGameRoom = (data: GameAndRoom) => {
-      console.log(
-        `[GAME ROOM]: player ${data.player.socket_id} left room ${data.game.room.id}.`,
-      );
+    const handleRemovePlayerFromRoom = (data: GamePayloadResource) => {
+      setGameState(prev => ({
+        players: { ...prev.players, [data.player.socket_id]: toPlayer(data.player)},
+        games: {...prev.games, [data.game.id]: toGame(data.game)},
+        rooms: {...prev.rooms, [data.room.id]: toRoom(data.room)}
+      }));
 
-      if (socketIO.id === data.player.socket_id) {
-        setGameState(prev => ({
-          ...prev,
-          players: {
-            ...prev.players,
-            [data.player.socket_id]: Player.buildPlayer(data.player),
-          },
-        }));
-
+      if (isCurrentPlayer(data.player.socket_id)) {
         navigation.navigate('Lobby');
       }
     };
 
-    const handleAddPlayer = (data: Player) => {
-      console.log(
-        `[GAME ROOM]: new player ${socketIO.id} connected ${data.socket_id}.`,
-      );
+    const handleRemoveGame = (data: RemovedGameResource) => {
+      console.log(`[GAME ROOM]: new room ${socketIO.id} removed ${data.game.id}.`);
 
-      setGameState(prev => ({
-        ...prev,
-        players: {...prev.players, [data.socket_id]: Player.buildPlayer(data)},
-      }));
-    };
-
-    const handleAddGame = (data: Game) => {
-      console.log(`[GAME ROOM]: new room ${socketIO.id} created ${data.id}.`);
-
-      setGameState(prev => ({
-        ...prev,
-        games: {...prev.games, [data.id]: Game.buildGame(data)},
-      }));
-    };
-
-    const handleRemoveGame = (data: Game) => {
-      console.log(`[GAME ROOM]: new room ${socketIO.id} removed ${data.id}.`);
-
-      setGameState(prev => {
-        const filteredGames: GameObject = {};
-
-        Object.keys(prev.games).forEach(key => {
-          const game = prev.games[key];
-
-          if (game.id !== data.id) {
-            filteredGames[key] = game;
-          }
+      setGameState((prev) => {
+        const updatedGameState = { ...prev };
+  
+        delete updatedGameState.games[data.game.id];
+        delete updatedGameState.rooms[data.room.id];
+  
+        data.players.forEach((playerResource) => {
+          const player = toPlayer(playerResource);
+          updatedGameState.players[player.socketId] = player;
         });
-
-        console.log(
-          '--> CHECK : ',
-          JSON.stringify(
-            {
-              currentPlayer: currentPlayer?.user?.profile?.nickname ?? 'N/D',
-              currentGame: currentPlayer?.current_game?.id ?? 'N/D',
-              dataId: data.id,
-            },
-            null,
-            4,
-          ),
-        );
-        if (currentPlayer?.current_game?.id === data.id) {
-          navigation.navigate('Lobby');
-        }
-
-        const updatedPlayers = Object.values(prev.players).reduce(
-          (playerObject: PlayerObject, currPlayer: Player) => {
-            if (currPlayer?.current_game?.id === data.id) {
-              currPlayer.current_game = undefined;
-            }
-
-            playerObject[currPlayer.socket_id] = currPlayer;
-
-            return playerObject;
-          },
-          {},
-        );
-        return {
-          ...prev,
-          players: updatedPlayers,
-          games: filteredGames,
-        };
+  
+        return updatedGameState;
       });
     };
 
-    const handleAddToRoom = (data: GameAndRoom) => {
-      console.log(
-        `[GAME ROOM]: Player ${data.player.socket_id} entering room ${data.game.room.id}.`,
-      );
-
-      setGameState(prev => ({
-        ...prev,
-        games: {...prev.games, [data.game.id]: Game.buildGame(data.game)},
-        players: {
-          ...prev.players,
-          [data.player.socket_id]: Player.buildPlayer(data.player),
-        },
-      }));
-    };
-
-    const handleRemoveFromRoom = (data: GameAndRoom) => {
-      setGameState(prev => ({
-        ...prev,
-        games: {...prev.games, [data.game.id]: Game.buildGame(data.game)},
-        players: {
-          ...prev.players,
-          [data.player.socket_id]: Player.buildPlayer(data.player),
-        },
-      }));
-    };
-
-    socketIO.on('connect', handleConnectGameRoom);
-    socketIO.on('disconnect', handleDisconnectGameRoom);
-    socketIO.on('create_game_room', handleCreateGameRoom);
-    socketIO.on('join_game_room', handleJoinGameRoom);
-    socketIO.on('leave_game_room', handleLeaveGameRoom);
+    socketIO.on('connect', handleConnectSocket);
+    socketIO.on('disconnect', handleDisconnectSocket);
     socketIO.on('fetch_state', handleFetchState);
     socketIO.on('add_player', handleAddPlayer);
     socketIO.on('add_game', handleAddGame);
     socketIO.on('remove_game', handleRemoveGame);
-    socketIO.on('add_to_room', handleAddToRoom);
-    socketIO.on('remove_from_room', handleRemoveFromRoom);
+    socketIO.on('add_player_to_room', handleAddPlayerToRoom);
+    socketIO.on('remove_player_from_room', handleRemovePlayerFromRoom);
 
     return () => {
-      socketIO.off('connect', handleConnectGameRoom);
-      socketIO.off('disconnect', handleDisconnectGameRoom);
-      socketIO.off('create_game_room', handleCreateGameRoom);
-      socketIO.off('join_game_room', handleJoinGameRoom);
-      socketIO.off('leave_game_room', handleLeaveGameRoom);
+      socketIO.off('connect', handleConnectSocket);
+      socketIO.off('disconnect', handleDisconnectSocket);
       socketIO.off('fetch_state', handleFetchState);
       socketIO.off('add_player', handleAddPlayer);
       socketIO.off('add_game', handleAddGame);
       socketIO.off('remove_game', handleRemoveGame);
-      socketIO.off('add_to_room', handleAddToRoom);
-      socketIO.off('remove_from_room', handleRemoveFromRoom);
+      socketIO.off('add_player_to_room', handleAddPlayerToRoom);
+      socketIO.off('remove_player_from_room', handleRemovePlayerFromRoom);
       socketIO.disconnect();
     };
   }, []);
@@ -283,9 +240,15 @@ const SocketProvider = ({children}: SocketProviderProps): JSX.Element => {
     socketIO: socketIO,
     games: gameState.games,
     players: gameState.players,
+    rooms: gameState.rooms,
     currentPlayer: currentPlayer,
     currentGame: currentGame,
+    currentRoom: currentRoom,
     logState: logState,
+    getPlayer: getPlayer,
+    getGame: getGame,
+    getRoom: getRoom,
+
   };
 
   return (

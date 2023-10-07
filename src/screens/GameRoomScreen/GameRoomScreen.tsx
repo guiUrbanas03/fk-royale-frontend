@@ -23,7 +23,7 @@ import {Image} from 'react-native';
 import {Button} from '../../components/Button';
 import {useSocket} from '../../contexts/SocketContext/SocketContext';
 import {EventArg, useNavigation} from '@react-navigation/native';
-import {Player} from '../../models/player';
+import { Player } from '../../models/player';
 
 type GameRoomScreenProps = NativeStackScreenProps<RootStackParams, 'GameRoom'>;
 
@@ -41,7 +41,7 @@ const {width} = Dimensions.get('window');
 const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
   const navigation: NativeStackNavigationProp<RootStackParams> =
     useNavigation();
-  const {games, socketIO, currentPlayer, currentGame} = useSocket();
+  const {games, socketIO, currentPlayer, currentGame, currentRoom, getRoom, getPlayer} = useSocket();
 
   const game = games[route.params.gameId];
   const {user} = useUser();
@@ -82,11 +82,13 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
   }
 
   const onLeaveRoom = () => {
-    socketIO.emit('leave_game_room', game);
+    socketIO.emit('leave_game_room', {game_id: game.id});
     confirmLeaveRoom();
   };
 
-  const players: Player[] = game?.room?.players ?? [];
+  const room = getRoom(game?.roomId);
+  const playerIds: Player['socketId'][] = currentRoom?.playerIds ?? [];  
+  const players = playerIds.map((playerId) => getPlayer(playerId));
 
   if (!game) {
     return (
@@ -124,7 +126,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
               }}>
-              <Text style={styles.title}>{game.room.name}</Text>
+              <Text style={styles.title}>{room.name}</Text>
               <Pressable
                 style={{
                   backgroundColor: '#4D8B71',
@@ -140,22 +142,22 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
                 />
               </Pressable>
             </View>
-            {game.room.password ? (
+            {room.password ? (
               <View
                 style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                 <Icon name="lock" />
-                <Text>{game.room.password}</Text>
+                <Text>{room.password}</Text>
               </View>
             ) : null}
           </View>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <Text style={{color: '#FFF'}}>{game.room.owner.user.email}</Text>
+            <Text style={{color: '#FFF'}}>{getPlayer(room.ownerId).user.profile.nickname}</Text>
             <View style={{flexDirection: 'row', gap: 30}}>
               <View
                 style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                 <Icon name="users" color="#FFF" size={16} />
                 <Text style={{color: '#FFF'}}>
-                  {players.length}/{game.settings.max_players}
+                  {players.length}/{game.settings.maxPlayers}
                 </Text>
               </View>
               <View
@@ -167,16 +169,16 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
                 style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
                 <Icon name="clock" color="#FFF" size={16} />
                 <Text style={{color: '#FFF'}}>
-                  {game.settings.turn_time_seconds}
+                  {game.settings.turnTimeSeconds}
                 </Text>
               </View>
             </View>
           </View>
         </View>
         <View style={styles.playersContainer}>
-          {players.map((player: Player) => (
+        {players.map((player: Player) => (
             <View
-              key={player.socket_id}
+              key={player.socketId}
               style={{
                 backgroundColor: '#4D8B71',
                 borderRadius: 10,
@@ -202,7 +204,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
                   paddingHorizontal: 10,
                 }}>
                 <Text style={{color: '#FFF'}}>{player?.user.email}</Text>
-                {game.room.owner.socket_id === player.socket_id ? (
+                {room.ownerId === player.socketId ? (
                   <Text style={{color: '#FFF', fontWeight: '700'}}>OWNER</Text>
                 ) : Math.random() > 0.5 ? (
                   // <Text style={{color: '#5AE381', fontWeight: '700'}}>
@@ -233,7 +235,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
         <Text style={{color: '#FFF', marginBottom: 20}}>
           Waiting everyone to get ready...
         </Text>
-        {game.room.owner.socket_id === socketIO.id ? (
+        {room.ownerId === socketIO.id ? (
           <Button
             mode="contained"
             buttonColor="#00B4EB"
@@ -266,7 +268,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
           <Text style={{color: '#FFF', marginBottom: 20, fontSize: 18}}>
             Are you sure you want to leave the room{' '}
             <Text style={{fontWeight: '700', color: '#FFF', fontSize: 18}}>
-              {game.room.name}
+              {room.name}
             </Text>
             ?
           </Text>

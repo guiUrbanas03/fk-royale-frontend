@@ -18,7 +18,7 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
   const theme = useTheme();
   const navigation: NativeStackNavigationProp<RootStackParams> =
     useNavigation();
-  const {currentGame} = useSocket();
+  const {currentGame, currentRoom} = useSocket();
   const {user} = useUser();
 
   return (
@@ -51,7 +51,7 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
               borderRadius: 10,
               justifyContent: 'center',
             }}
-            label={`Click to go back to ${currentGame.room.name}`}
+            label={`Click to go back to ${currentRoom?.name}`}
             onPress={() =>
               navigation.navigate('GameRoom', {gameId: currentGame.id})
             }

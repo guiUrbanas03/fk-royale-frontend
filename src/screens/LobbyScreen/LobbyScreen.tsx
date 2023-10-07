@@ -13,18 +13,18 @@ import {Controller, useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useSocket} from '../../contexts/SocketContext/SocketContext';
 import {useUser} from '../../hooks/user/user';
-import {Room} from '../../models/room';
-import {Game, GameSettings} from '../../models/game';
 import Toast from 'react-native-toast-message';
+import { RoomResource } from '../../models/room';
+import { Game, GameSettingsResource } from '../../models/game';
 
 type LobbyScreenProps = NativeStackScreenProps<RootStackParams, 'Lobby'>;
 
 export type CreateRoomForm = {
-  name: Room['name'];
-  password?: Room['password'];
-  max_players: GameSettings['max_players'];
-  lives: GameSettings['lives'];
-  turn_time_seconds: GameSettings['turn_time_seconds'];
+  name: RoomResource['name'];
+  password?: RoomResource['password'];
+  max_players: GameSettingsResource['max_players'];
+  lives: GameSettingsResource['lives'];
+  turn_time_seconds: GameSettingsResource['turn_time_seconds'];
 };
 
 const createRoomSchema: ZodType<CreateRoomForm> = z.object({
@@ -37,7 +37,7 @@ const createRoomSchema: ZodType<CreateRoomForm> = z.object({
 
 const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
   const {user} = useUser();
-  const {socketIO, games, currentGame, currentPlayer} = useSocket();
+  const {socketIO, games, currentGame, getPlayer, getRoom} = useSocket();
   const [visible, setVisible] = useState<boolean>(false);
   const {
     control,
@@ -55,6 +55,7 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
     },
   });
 
+
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
 
@@ -64,19 +65,18 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
     reset();
   };
 
-  const joinRoom = (data: Game) => {
-    if (currentPlayer?.current_game?.id === data.id) {
-      navigation.navigate('GameRoom', {gameId: data.id});
-    } else if (
-      currentPlayer?.current_game &&
-      currentPlayer?.current_game?.id !== data.id
-    ) {
-      Toast.show({
-        type: 'error',
-        text1: 'You are already in a room!',
-      });
+  const joinRoom = (gameId: Game['id']) => {
+    if (!currentGame?.id) {
+      socketIO.emit('join_game_room', { game_id: gameId });
+
+    } else if (currentGame?.id === gameId) {
+      navigation.navigate('GameRoom', {gameId: gameId});
+
     } else {
-      socketIO.emit('join_game_room', data);
+        Toast.show({
+          type: 'error',
+          text1: 'You are already in a room!',
+        });
     }
   };
 
@@ -256,59 +256,61 @@ const LobbyScreen = ({navigation}: LobbyScreenProps): JSX.Element => {
       {Object.keys(games)?.length > 0 ? (
         <View>
           {Object.values(games).map((game: Game) => (
-            <Pressable
-              onPress={() => joinRoom(game)}
-              key={game.room.id}
-              style={{
-                backgroundColor: '#4D8B71',
-                borderRadius: 10,
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                marginBottom: 20,
-                borderColor:
-                  game.room.id === currentGame?.room.id ? '#FFD362' : '',
-                borderWidth: game.room.id === currentGame?.room.id ? 1 : 0,
-              }}>
-              <View
+            getRoom(game?.roomId) ? (
+              <Pressable
+                onPress={() => joinRoom(game.id)}
+                key={game.roomId}
                 style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginBottom: 10,
+                  backgroundColor: '#4D8B71',
+                  borderRadius: 10,
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  marginBottom: 20,
+                  borderColor:
+                    game.roomId === currentGame?.roomId ? '#FFD362' : '',
+                  borderWidth: game.roomId === currentGame?.roomId ? 1 : 0,
                 }}>
                 <View
-                  style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                  <Text
-                    style={{color: '#FFF', fontWeight: '700', fontSize: 20}}>
-                    {game.room.name}
-                  </Text>
-                  {game.room.password ? <Icon name="lock" /> : null}
-                </View>
-                <Text style={{color: 'red'}}>
-                  {game.room.id.substring(0, 5)}
-                </Text>
-              </View>
-              <View style={{flexDirection: 'row', gap: 30}}>
-                <View
-                  style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
-                  <Icon name="users" color="#FFF" />
-                  <Text style={{color: '#FFF'}}>
-                    {game.settings.max_players}
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginBottom: 10,
+                  }}>
+                  <View
+                    style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+                    <Text
+                      style={{color: '#FFF', fontWeight: '700', fontSize: 20}}>
+                      {getRoom(game.roomId).name}
+                    </Text>
+                    {getRoom(game.roomId).password ? <Icon name="lock" /> : null}
+                  </View>
+                  <Text style={{color: 'white'}}>
+                    {getPlayer(getRoom(game?.roomId)?.ownerId)?.user?.profile?.nickname?.substring(0, 10)}
                   </Text>
                 </View>
-                <View
-                  style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
-                  <Icon name="heart" color="#FFF" />
-                  <Text style={{color: '#FFF'}}>{game.settings.lives}</Text>
+                <View style={{flexDirection: 'row', gap: 30}}>
+                  <View
+                    style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
+                    <Icon name="users" color="#FFF" />
+                    <Text style={{color: '#FFF'}}>
+                      {game.settings.maxPlayers}
+                    </Text>
+                  </View>
+                  <View
+                    style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
+                    <Icon name="heart" color="#FFF" />
+                    <Text style={{color: '#FFF'}}>{game.settings.lives}</Text>
+                  </View>
+                  <View
+                    style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
+                    <Icon name="clock" color="#FFF" />
+                    <Text style={{color: '#FFF'}}>
+                      {game.settings.turnTimeSeconds}
+                    </Text>
+                  </View>
                 </View>
-                <View
-                  style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
-                  <Icon name="clock" color="#FFF" />
-                  <Text style={{color: '#FFF'}}>
-                    {game.settings.turn_time_seconds}
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
+              </Pressable>
+            ) : null
           ))}
         </View>
       ) : (

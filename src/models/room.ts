@@ -1,28 +1,22 @@
-import {Player} from './player';
+import { PlayerResource } from "./player";
 
-class Room {
-  public id: string;
-  public name: string;
-  public password?: string;
-  public owner: Player;
-  public players: Player[];
-
-  constructor(room: Room) {
-    const {id, owner, name, password, players = []} = room;
-
-    this.id = id;
-    this.owner = owner;
-    this.name = name;
-    this.password = password;
-    this.players = players;
-  }
-
-  public static buildRoom(data: Room) {
-    const owner = Player.buildPlayer(data.owner);
-    const players = data.players.map(player => new Player(player));
-
-    return new Room({...data, owner, players});
-  }
+interface Room {
+  id: RoomResource['id'];
+  name: RoomResource['name'];
+  password?: RoomResource['password'];
+  ownerId: RoomResource['owner_id'];
+  playerIds: RoomResource['player_ids'];
 }
 
-export {Room};
+interface RoomResource {
+  id: string;
+  name: string;
+  password?: string;
+  owner_id: PlayerResource['socket_id'];
+  player_ids: PlayerResource['socket_id'][];
+}
+
+export { 
+  type Room,
+  type RoomResource,
+};
