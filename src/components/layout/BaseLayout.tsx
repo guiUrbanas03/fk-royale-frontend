@@ -1,42 +1,42 @@
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
-import {FAB, useTheme} from 'react-native-paper';
-import {ScrollView, StyleSheet, View, ViewStyle} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useSocket} from '../../contexts/SocketContext/SocketContext';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParams} from '../../navigations/RootNavigation/RootNavigation';
+import { FAB, useTheme } from 'react-native-paper';
+import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSocket } from '../../contexts/SocketContext/SocketContext';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParams } from '../../navigations/RootNavigation/RootNavigation';
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
-import {useUser} from '../../hooks/user/user';
+import { useUser } from '../../hooks/user/user';
 
 type BaseLayoutProps = {
   children: React.ReactNode;
   scroll?: boolean;
 };
 
-const BaseLayout = ({children, scroll = true}: BaseLayoutProps): JSX.Element => {
+const BaseLayout = ({ children, scroll = true }: BaseLayoutProps): JSX.Element => {
   const theme = useTheme();
   const navigation: NativeStackNavigationProp<RootStackParams> =
     useNavigation();
-  const {currentGame, currentRoom} = useSocket();
-  const {user} = useUser();
+  const { currentGame, currentRoom } = useSocket();
+  const { user } = useUser();
 
   return (
     <LinearGradient
       colors={[theme.colors.primary, theme.colors.secondary]}
-      start={{x: 0, y: 0}}
-      end={{x: 0, y: 1}}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
       style={styles.linearGradient}>
-      <SafeAreaView style={{flex: 1}}>
+      <SafeAreaView style={{ flex: 1 }}>
         {scroll ? (
           <ScrollView
-            style={{padding: 20}}
+            style={{ padding: 20 }}
             contentInsetAdjustmentBehavior="automatic">
             {children}
           </ScrollView>
         ) : (
-          <View style={{padding: 20}}>
+          <View style={{ padding: 20, flex: 1 }}>
             {children}
           </View>
         )}
@@ -56,7 +56,7 @@ const BaseLayout = ({children, scroll = true}: BaseLayoutProps): JSX.Element => 
             }}
             label={`Return to ${currentRoom?.name}`}
             onPress={() =>
-              navigation.navigate('GameRoom', {gameId: currentGame.id})
+              navigation.navigate('GameRoom', { gameId: currentGame.id })
             }
             color="#FFF"
             uppercase={true}
@@ -88,4 +88,4 @@ const styles = StyleSheet.create<Styles>({
   },
 });
 
-export {BaseLayout};
+export { BaseLayout };
