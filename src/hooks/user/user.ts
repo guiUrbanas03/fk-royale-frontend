@@ -5,7 +5,9 @@ import {useAuthInterceptors} from '../auth/interceptors';
 const getUser = async () => {
   const res = await whoAmI();
 
+  
   if (res && res.status === 200) {
+
     return {
       ...res.data.user,
       profile: res.data.profile,
@@ -28,14 +30,7 @@ const useUser = () => {
   const queryClient: QueryClient = useQueryClient();
   useAuthInterceptors(clearUser);
 
-  const {
-    data: user,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ['auth', 'whoami'],
-    queryFn: () => getUser(),
-  });
+  const { data: user, isLoading, isError, } = useQuery({ queryKey: ['auth', 'whoami'], queryFn: () => getUser(), });
 
   return {
     user,

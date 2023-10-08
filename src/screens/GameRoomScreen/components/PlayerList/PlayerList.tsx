@@ -16,7 +16,6 @@ const PlayerList = ({ data, game }: PlayerListProps): JSX.Element => {
 
     return (
         <FlatList
-            scrollEnabled
             data={data}
             renderItem={renderPlayerItem}
             keyExtractor={(player: Player) => player.socketId}

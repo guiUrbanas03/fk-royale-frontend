@@ -1,9 +1,9 @@
 import {io, Socket} from 'socket.io-client';
-import {CreateRoomForm} from '../screens/LobbyScreen/LobbyScreen';
 import {getLocalTokens} from '../services/token-service';
 import { Player, PlayerResource } from '../models/player';
 import { Game, GameResource } from '../models/game';
 import { Room, RoomResource } from '../models/room';
+import { CreateRoomForm } from '../screens/LobbyScreen/components/GameRoomForm/GameRoomForm';
 
 type ObjectMap<KeyType extends PropertyKey, ValueType> = {
   [key in KeyType]: ValueType;
