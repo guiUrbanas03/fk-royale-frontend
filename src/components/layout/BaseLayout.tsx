@@ -12,9 +12,10 @@ import {useUser} from '../../hooks/user/user';
 
 type BaseLayoutProps = {
   children: React.ReactNode;
+  scroll?: boolean;
 };
 
-const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
+const BaseLayout = ({children, scroll = true}: BaseLayoutProps): JSX.Element => {
   const theme = useTheme();
   const navigation: NativeStackNavigationProp<RootStackParams> =
     useNavigation();
@@ -28,15 +29,17 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
       end={{x: 0, y: 1}}
       style={styles.linearGradient}>
       <SafeAreaView style={{flex: 1}}>
-        <ScrollView
-          style={{padding: 20}}
-          contentInsetAdjustmentBehavior="automatic">
-          {children}
-
-          {currentGame && user ? (
-            <View style={{height: 100, marginBottom: 20}} />
-          ) : null}
-        </ScrollView>
+        {scroll ? (
+          <ScrollView
+            style={{padding: 20}}
+            contentInsetAdjustmentBehavior="automatic">
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={{padding: 20}}>
+            {children}
+          </View>
+        )}
         {currentGame && user ? (
           <FAB
             icon={() => <FontAwesome5Icon name="home" color="#FFF" size={20} />}
@@ -51,7 +54,7 @@ const BaseLayout = ({children}: BaseLayoutProps): JSX.Element => {
               borderRadius: 10,
               justifyContent: 'center',
             }}
-            label={`Click to go back to ${currentRoom?.name}`}
+            label={`Return to ${currentRoom?.name}`}
             onPress={() =>
               navigation.navigate('GameRoom', {gameId: currentGame.id})
             }

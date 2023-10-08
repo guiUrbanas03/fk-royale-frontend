@@ -107,7 +107,7 @@ const GameRoomScreen = ({route}: GameRoomScreenProps): JSX.Element => {
             buttonColor="#FFF"
             textColor="#56947A"
             onPress={() => navigation.navigate('Lobby')}>
-            LEAVE ROOM
+            GO TO LOBBY
           </Button>
         </View>
       </BaseLayout>

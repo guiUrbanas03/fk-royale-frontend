@@ -19,7 +19,7 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParams} from '../../navigations/RootNavigation/RootNavigation';
 import { Player, PlayerResource } from '../../models/player';
-import { Game, GameResource } from '../../models/game';
+import { Game } from '../../models/game';
 import { Room } from '../../models/room';
 import { toGame } from '../../transformers/game-transformer';
 import { toPlayer } from '../../transformers/player-transformer';
